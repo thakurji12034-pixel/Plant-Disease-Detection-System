@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Disease Detection</title>
+    <style>
+        /* Import modern font */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        /* Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        /* Theme: Light Grey, Black, and Light Green Gradient Glass */
+        body {
+            font-family: 'Poppins', sans-serif;
+            /* Animated Gradient: Light Grey, Black, Light Green */
+            background: linear-gradient(-60deg, #1f1f1f, #a3a3a3, #000000, #bbf7d0, #111111);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: #334155;
+            /* Dark grey for readability */
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 80px 20px 40px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        header h1 {
+            font-size: 48px;
+            font-weight: 700;
+            color: #166534;
+            /* Deep Green */
+            letter-spacing: -0.5px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        header p {
+            font-size: 18px;
+            color: #64748b;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Navbar */
+        nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 12px 28px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            background: linear-gradient(135deg, rgba(235, 235, 235, 0.8), rgba(180, 180, 180, 0.55));
+            border-radius: 50px;
+            margin: 0 auto 50px;
+            width: auto;
+            max-width: 520px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            position: sticky;
+            top: 20px;
+            z-index: 1000;
+            isolation: isolate;
+            transition: background 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease, top 0.3s ease, padding 0.3s ease;
+            will-change: transform;
+        }
+
+        /* Navbar Links - EXACT same font size, font family, and weight */
+        nav a {
+            font-family: 'Poppins', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: #166534;
+            padding: 8px 16px;
+            text-decoration: none;
+            position: relative;
+            white-space: nowrap;
+            border-radius: 20px;
+            transition: color 0.3s ease, background 0.3s ease, transform 0.2s ease;
+            display: inline-block;
+        }
+
+        nav a:hover {
+            color: #15803d;
+            background: rgba(34, 197, 94, 0.12);
+        }
+
+        /* Navbar Scrolled State - Clean, cohesive frosted dark glass pill (no laggy spreading) */
+        nav.scrolled {
+            top: 12px;
+            padding: 10px 24px;
+            background: rgba(20, 26, 22, 0.82);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5), 0 0 15px rgba(34, 197, 94, 0.2);
+            border-color: rgba(74, 222, 128, 0.25);
+        }
+
+        /* Scrolled Links - All 3 keep identical font size, family, and weight */
+        nav.scrolled a {
+            font-family: 'Poppins', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: #86efac;
+            transform: none !important;
+            opacity: 1 !important;
+        }
+
+        nav.scrolled a:hover {
+            color: #ffffff;
+            background: rgba(34, 197, 94, 0.25);
+        }
+
+        /* Animated underline */
+        nav a::after {
+            content: '';
+            position: absolute;
+            width: 0%;
+            height: 2.5px;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 2px;
+            background: #22c55e;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 2px;
+        }
+
+        nav a:hover::after {
+            width: calc(100% - 24px);
+        }
+
+        /* Sections */
+        section {
+            padding: 20px 20px 80px;
+            min-height: auto;
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            position: relative;
+        }
+
+        /* Floating glowing Photos - 2D GPU-accelerated to prevent backdrop-filter glitching */
+        .floating-photo {
+            position: absolute;
+            border-radius: 20px;
+            object-fit: cover;
+            opacity: 0;
+            transform: translateY(30px) scale(0.92);
+            transition: opacity 0.8s ease-out, transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            pointer-events: none;
+            z-index: 1;
+            border: 2px solid rgba(16, 185, 129, 0.35);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 15px rgba(34, 197, 94, 0.2);
+            will-change: transform, opacity;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .floating-photo.show {
+            opacity: 0.85;
+            transform: translateY(0) scale(1);
+            animation: floatContinuous 7s ease-in-out infinite;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(34, 197, 94, 0.35);
+        }
+
+        @keyframes floatContinuous {
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-15px) rotate(2.5deg);
+            }
+        }
+
+        .img-1 {
+            top: 5%;
+            left: -10vw;
+            width: 180px;
+            height: 220px;
+            animation-delay: 0s;
+        }
+
+        .img-2 {
+            top: 15%;
+            right: -15vw;
+            width: 220px;
+            height: 300px;
+            animation-delay: 1.5s;
+        }
+
+        .img-3 {
+            top: 5%;
+            left: -8vw;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            animation-delay: 0.5s;
+            opacity: 0.9 !important;
+        }
+
+        .img-4 {
+            top: 55%;
+            right: -10vw;
+            width: 150px;
+            height: 200px;
+            animation-delay: 2.2s;
+        }
+
+        .img-5 {
+            top: 60%;
+            left: -12vw;
+            width: 200px;
+            height: 260px;
+            animation-delay: 1.2s;
+        }
+
+        /* Smooth Scroll Card */
+        .scroll-3d {
+            opacity: 0;
+            transform: translateY(40px) scale(0.98);
+            transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+            background: linear-gradient(135deg, rgba(250, 250, 250, 0.9), rgba(180, 180, 180, 0.7));
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 50px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            position: relative;
+            z-index: 2;
+        }
+
+        .scroll-3d.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        h2 {
+            color: #15803d;
+            margin-bottom: 25px;
+            font-size: 34px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        p {
+            line-height: 1.8;
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: #475569;
+        }
+
+        .highlight {
+            color: #166534;
+            font-weight: 600;
+        }
+
+        /* Information Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(200, 200, 200, 0.3));
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.06);
+            border-color: #cbd5e1;
+        }
+
+        .info-card h3 {
+            color: #0f766e;
+            margin-bottom: 15px;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-card ul {
+            list-style-position: inside;
+            margin-top: 10px;
+            color: #475569;
+            padding-left: 20px;
+        }
+
+        .info-card ul li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        /* Small Classy Upload Stylings */
+        .upload-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .classy-upload-wrap {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .small-btn {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(200, 200, 200, 0.2));
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            padding: 12px 24px;
+            border-radius: 30px;
+            color: #166534;
+            /* Complies with "except text" requirement holding onto green shades */
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .small-btn:hover,
+        .small-btn.dragover {
+            background: rgba(255, 255, 255, 0.8);
+            transform: translateY(-2px);
+            border-color: #bbf7d0;
+            color: #15803d;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .small-btn-primary {
+            background: linear-gradient(135deg, #10b981, #047857);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .small-btn-primary:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #34d399, #059669);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.6);
+        }
+
+        .small-btn-primary:active {
+            transform: translateY(1px);
+        }
+
+        .file-name {
+            display: inline-block;
+            max-width: 150px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Preview Image Area */
+        .img-preview-container {
+            margin-top: 20px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        img#previewImg {
+            max-width: 100%;
+            height: auto;
+            max-height: 400px;
+            border-radius: 16px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            object-fit: cover;
+        }
+
+        /* Supported Diseases List */
+        .disease-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .badge {
+            background: linear-gradient(135deg, rgba(220, 220, 220, 0.9), rgba(150, 150, 150, 0.6));
+            backdrop-filter: blur(5px);
+            color: #166534;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Result Box */
+        #result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 16px;
+            font-size: 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        #result.show {
+            display: block;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .result-success {
+            background: linear-gradient(135deg, rgba(200, 200, 200, 0.9), rgba(150, 150, 150, 0.5));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.3);
+            color: #166534;
+        }
+
+        .result-error {
+            background: linear-gradient(135deg, rgba(200, 200, 200, 0.9), rgba(150, 150, 150, 0.5));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.3);
+            color: #b91c1c;
+        }
+
+        .result-title {
+            font-weight: 700;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px;
+            margin-top: 20px;
+            color: #64748b;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                gap: 8px;
+                padding: 10px 14px;
+                width: 95%;
+            }
+
+            nav a,
+            nav.scrolled a {
+                font-size: 13px;
+                padding: 6px 10px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 38px;
+            }
+
+            .scroll-3d {
+                padding: 30px 20px;
+            }
+
+            .floating-photo {
+                display: none;
+                /* Hide floating photos on small screens so they don't block content */
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>🌿 Plant Disease Detection System</h1>
+        <p>AI-Based Leaf Disease Identification & Information Hub</p>
+    </header>
+
+    <nav>
+        <a href="#about">What is it?</a>
+        <a href="#causes">Why it Happens</a>
+        <a href="#detect">Detect Disease</a>
+    </nav>
+
+    <!-- ABOUT / WHAT IS IT -->
+    <section id="about">
+        <div class="container">
+            <!-- Floating 3D Images -->
+            <img src="leaf_1.png" class="floating-photo img-1" alt="Dark Wet Leaves">
+            <img src="leaf_2.png" class="floating-photo img-4" alt="Fern Leaves">
+
+            <div class="scroll-3d">
+                <h2>📖 Understanding Plant Diseases</h2>
+                <p>
+                    A <span class="highlight">plant disease</span> is defined as any abnormal symptom or biological
+                    condition that essentially alters the appearance, growth, or physiological function of a plant. Just
+                    like humans, plants suffer from ailments that can stunt their growth, discolor their leaves, or even
+                    lead to their death.
+                </p>
+                <p>
+                    In the agricultural ecosystem, diseases are a major barrier to food security. They dramatically
+                    reduce crop yield and quality. Early detection and identification are the most critical steps to
+                    isolate the disease, prevent it from spreading, and apply the correct treatments in time.
+                </p>
+
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>🔬 Deep Learning Solution</h3>
+                        <p>
+                            This system harnesses the power of <b>Convolutional Neural Networks (CNN - MobileNetV2)</b>.
+                            By feeding an image of a leaf into the AI model, the system analyzes its visual
+                            patterns—like spots, discoloration, and textures—to accurately classify its health status.
+                        </p>
+                    </div>
+                    <div class="info-card">
+                        <h3>⚡ Why Early Detection?</h3>
+                        <p>
+                            Identifying a disease precisely when symptoms first appear helps farmers take immediate
+                            restorative actions. It minimizes the need for excessive harmful pesticides, reduces
+                            financial loss, and significantly boosts overall crop productivity.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CAUSES / WHY IT HAPPENS -->
+    <section id="causes">
+        <div class="container">
+            <!-- Floating 3D Images -->
+            <img src="leaf_3.png" class="floating-photo img-2" alt="Wet Green Leaf">
+            <img src="leaf_4.png" class="floating-photo img-5" alt="Macro Leaf">
+
+            <div class="scroll-3d">
+                <h2>⚠️ Why Do Plant Diseases Happen?</h2>
+                <p>
+                    Plant diseases occur when a susceptible host plant, a virulent pathogen, and favorable environmental
+                    conditions coincide. This relationship is often referred to as the <b>Disease Triangle</b>.
+                </p>
+
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>🦠 Common Pathogens</h3>
+                        <ul>
+                            <li><b>Fungi:</b> The leading cause of plant diseases. They manifest as mold, rust, mildew,
+                                or spots and thrive in damp, highly humid environments.</li>
+                            <li><b>Bacteria:</b> These microscopic organisms enter plants through wounds or natural
+                                openings, leading to blights, wilts, or soft rots.</li>
+                            <li><b>Viruses:</b> Often transmitted by insects like aphids, viruses alter plant genetics,
+                                causing mosaic patterns, stunted growth, and distorted leaves.</li>
+                        </ul>
+                    </div>
+                    <div class="info-card">
+                        <h3>🌩️ Environmental Stress</h3>
+                        <p>
+                            Non-infectious diseases (disorders) are caused by hostile environmental or physical
+                            conditions rather than living organisms.
+                        </p>
+                        <ul>
+                            <li>Nutrient deficiencies or toxicities in the soil.</li>
+                            <li>Extreme temperature fluctuations (frost or heatwaves).</li>
+                            <li>Improper watering habits (drought stress or waterlogging).</li>
+                            <li>Poor soil structure and aeration.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px; text-align: center; color: #0f766e;">Diseases Our Model Can Identify:</h3>
+                <div class="disease-badges">
+                    <span class="badge">Bacterial Spot</span>
+                    <span class="badge">Early Blight</span>
+                    <span class="badge">Late Blight</span>
+                    <span class="badge">Leaf Mold</span>
+                    <span class="badge">Target Spot</span>
+                    <span class="badge">Tomato Mosaic Virus</span>
+                    <span class="badge">Healthy Leaf Check</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DETECTION -->
+    <section id="detect">
+        <div class="container">
+            <!-- Floating 3D Image -->
+            <img src="leaf_5.png" class="floating-photo img-3" alt="Texture Leaves">
+
+            <div class="scroll-3d detect-card" id="detectCard">
+                <h2>🔍 AI Disease Scanner</h2>
+                <p style="text-align: center;">Choose a clear picture of a plant leaf, and our AI will instantly
+                    diagnose it.</p>
+
+                <div class="upload-container">
+                    <div class="classy-upload-wrap">
+                        <input type="file" id="imageInput" accept="image/*" hidden>
+
+                        <label for="imageInput" class="small-btn" id="uploadLabel">
+                            <span>📁</span> <span class="file-name" id="fileNameDisplay">Select Leaf Photo</span>
+                        </label>
+
+                        <button class="small-btn-primary" onclick="uploadImage()">Diagnose Image</button>
+                    </div>
+
+                    <div class="img-preview-container" id="previewContainer">
+                        <img id="previewImg" src="" alt="Selected Leaf Preview">
+                    </div>
+
+                    <div id="result"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>Plant Disease Detection Project | Presented by Vandana Tanwar ,Aman, Parth, Mayank, Ritika </p>
+    </footer>
+
+    <script>
+        // --- Smooth Navbar Scroll Logic ---
+        const navbar = document.querySelector('nav');
+        let isScrollTicking = false;
+        window.addEventListener('scroll', () => {
+            if (!isScrollTicking) {
+                window.requestAnimationFrame(() => {
+                    if (window.scrollY > 50) {
+                        navbar.classList.add('scrolled');
+                    } else {
+                        navbar.classList.remove('scrolled');
+                    }
+                    isScrollTicking = false;
+                });
+                isScrollTicking = true;
+            }
+        }, { passive: true });
+
+        // --- Smooth Scroll Reveal Logic ---
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px 0px -40px 0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('show');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.scroll-3d, .floating-photo').forEach(el => {
+            observer.observe(el);
+        });
+
+        // --- Modern File Upload Logic ---
+        const imageInput = document.getElementById("imageInput");
+        const previewImg = document.getElementById("previewImg");
+        const previewContainer = document.getElementById("previewContainer");
+        const resultDiv = document.getElementById("result");
+        const uploadLabel = document.getElementById("uploadLabel");
+        const fileNameDisplay = document.getElementById("fileNameDisplay");
+        const detectCard = document.getElementById("detectCard"); // Map drop events to the whole detect card!
+
+        // Drag and drop event listeners across the detect section
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            detectCard.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            detectCard.addEventListener(eventName, () => uploadLabel.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            detectCard.addEventListener(eventName, () => uploadLabel.classList.remove('dragover'), false);
+        });
+
+        detectCard.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                imageInput.files = files; // Assign files to input
+                handleFiles(files[0]);
+            }
+        });
+
+        imageInput.addEventListener("change", function () {
+            if (this.files.length > 0) {
+                handleFiles(this.files[0]);
+            }
+        });
+
+        function handleFiles(file) {
+            fileNameDisplay.textContent = file.name;
+            previewImg.src = URL.createObjectURL(file);
+            previewContainer.style.display = 'block';
+
+            // Reset Result Box
+            resultDiv.className = '';
+            resultDiv.innerHTML = '';
+            resultDiv.classList.remove('show');
+        }
+
+        // --- Upload an AI Prediction Logic ---
+        async function uploadImage() {
+            const file = imageInput.files[0];
+
+            if (!file) {
+                alert("Please select or drop an image first!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            resultDiv.className = 'show';
+            resultDiv.innerHTML = '🔄 Processing image with AI...';
+
+            try {
+                const apiUrl = window.location.protocol === 'file:' ? 'http://127.0.0.1:5000/predict' : '/predict';
+                const response = await fetch(apiUrl, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                resultDiv.className = 'show result-success';
+                resultDiv.innerHTML = `
+                 <div class="result-title">${data.prediction}</div>
+                 <div style="font-size: 16px; color: #475569;">Confidence: <b>${data.confidence}</b></div>
+            `;
+            } catch (error) {
+                resultDiv.className = 'show result-error';
+                resultDiv.innerHTML = "❌ Failed to connect to AI server. Make sure it is running!";
+            }
+        }
+    </script>
+
+</body>
+
+</html>
