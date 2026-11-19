@@ -812,7 +812,7 @@
             formData.append("file", file);
 
             resultDiv.className = 'show';
-            resultDiv.innerHTML = '🔄 Processing image with AI...';
+            resultDiv.innerHTML = '🔄 Processing image with AI... (if on free hosting, initial start may take ~30-60s)';
 
             try {
                 const apiUrl = window.location.protocol === 'file:' ? 'http://127.0.0.1:5000/predict' : '/predict';
@@ -820,6 +820,16 @@
                     method: "POST",
                     body: formData
                 });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => null);
+                    if (errData && errData.prediction) {
+                        resultDiv.className = 'show result-error';
+                        resultDiv.innerHTML = `❌ ${errData.prediction}`;
+                        return;
+                    }
+                    throw new Error(`Server returned status ${response.status}`);
+                }
 
                 const data = await response.json();
 
@@ -829,8 +839,9 @@
                  <div style="font-size: 16px; color: #475569;">Confidence: <b>${data.confidence}</b></div>
             `;
             } catch (error) {
+                console.error("Prediction error:", error);
                 resultDiv.className = 'show result-error';
-                resultDiv.innerHTML = "❌ Failed to connect to AI server. Make sure it is running!";
+                resultDiv.innerHTML = `❌ Failed to connect to AI server (${error.message || 'Error'}). Make sure Render service is Live!`;
             }
         }
     </script>

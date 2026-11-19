@@ -47,6 +47,10 @@ def index():
 def serve_static(filename):
     return send_from_directory(os.path.dirname(os.path.abspath(__file__)), filename)
 
+@app.route('/health')
+def health():
+    return jsonify({"status": "ok", "model_ready": model is not None})
+
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'file' not in request.files:
