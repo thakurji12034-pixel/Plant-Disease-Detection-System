@@ -10,6 +10,8 @@ if sys.prefix == sys.base_prefix:
 
 os.environ["KERAS_BACKEND"] = "torch"
 import io
+import torch
+torch.set_num_threads(1)
 import numpy as np
 from PIL import Image
 from flask import Flask, request, jsonify, send_file, send_from_directory
@@ -28,6 +30,15 @@ if input_shape is None or len(input_shape) < 3 or input_shape[1] is None:
     img_size = (224, 224)
 else:
     img_size = (input_shape[1], input_shape[2])
+
+# Warm up model once at startup so cloud hosting doesn't timeout on the first request
+try:
+    with torch.no_grad():
+        dummy_in = np.zeros((1, img_size[0], img_size[1], 3), dtype=np.float32)
+        _ = model.predict(dummy_in, verbose=0)
+    print("Model warmup complete.")
+except Exception as _e:
+    print("Warmup skipped:", _e)
 
 CLASS_NAMES = [
     "Bacterial Spot",
@@ -72,7 +83,8 @@ def predict():
         
         img_array = np.expand_dims(img_array, axis=0)
 
-        predictions = model.predict(img_array)
+        with torch.no_grad():
+            predictions = model.predict(img_array, verbose=0)
         score = predictions[0] 
         
         class_idx = np.argmax(score)
