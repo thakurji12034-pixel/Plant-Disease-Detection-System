@@ -1,0 +1,8 @@
+﻿flask
+flask-cors
+keras
+torch
+torchvision
+numpy
+pillow
+gunicorn
