@@ -3,9 +3,10 @@ import sys
 import subprocess
 
 # Auto-use project virtual environment if invoked with global python
-_venv_python = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".venv", "Scripts", "python.exe")
-if os.path.exists(_venv_python) and os.path.normcase(sys.executable) != os.path.normcase(_venv_python):
-    sys.exit(subprocess.call([_venv_python] + sys.argv))
+if sys.prefix == sys.base_prefix:
+    _venv_python = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".venv", "Scripts", "python.exe")
+    if os.path.exists(_venv_python) and os.path.normcase(sys.executable) != os.path.normcase(_venv_python):
+        sys.exit(subprocess.call([_venv_python] + sys.argv))
 
 os.environ["KERAS_BACKEND"] = "torch"
 import io
@@ -94,4 +95,4 @@ def predict():
         return jsonify({"prediction": "Error processing image", "confidence": "0%"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, use_reloader=False, host='0.0.0.0', port=5000)
